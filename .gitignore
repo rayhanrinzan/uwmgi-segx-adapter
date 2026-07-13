@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 data/
 workdir/
 outputs/
@@ -7,3 +8,33 @@ outputs/
 *.csv
 .DS_Store
 __pycache__/
+=======
+# Generated datasets
+data/
+workdir/
+outputs/
+experiments/
+
+# Model artifacts / predictions
+*.pth
+*.pt
+*.ckpt
+*.npz
+*.npy
+
+# Generated image/mask files
+*.png
+*.jpg
+*.jpeg
+*.tif
+*.tiff
+
+# Private SegX repo if accidentally placed here
+segx/
+
+# Python / OS junk
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+>>>>>>> c82aea9 (Edited gitignore and added make_segx_uwmgi_dataset.py script)
