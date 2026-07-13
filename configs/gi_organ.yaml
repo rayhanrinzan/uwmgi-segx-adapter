@@ -1,0 +1,138 @@
+seed: 42
+debug: false
+device: cuda:0
+job_id: 0
+
+snapshot_root: workdir/experiments
+experiment_tag: gi_organ_${model.backbone}_${train.num_epochs}_${train.fold}
+snapshot_dir: ${snapshot_root}/${experiment_tag}_${seed}/${now:%Y-%m-%d}/${now:%H-%M-%S}/${job_id}/
+
+optimizer:
+  cls: torch.optim.Adam
+  params:
+    lr: ${train.lr}
+    weight_decay: ${train.wd}
+    params: null
+  scheduler:
+    warmup_for: 0
+    warmup_from: ${train.lr}
+    type: milestones
+    gamma: 0.1
+    milestones: ${train.drop_at}
+
+model:
+  backbone: resnet34
+  cls: segx.train.model.segnet.SegModel
+  params:
+    arch: unet
+    encoder_name: ${model.backbone}
+    encoder_weights: imagenet
+    in_channels: 3
+
+loss:
+  cls: segx.train.loss.GroupedLoss
+  params:
+    groups: ${data.groups}
+    group_losses:
+      organ:
+        weight: 1.0
+        components:
+          - cls: segmentation_models_pytorch.losses.DiceLoss
+            weight: 1.0
+            params: {}
+          - cls: segmentation_models_pytorch.losses.SoftCrossEntropyLoss
+            weight: 1.0
+            params:
+              smooth_factor: 0.0
+
+train:
+  fold: 0
+  ema: false
+  ema_start_after: 1
+  ema_decay: 0.999
+  ema_update_interval: 10
+  engine: segx.train.engine.SegmentationEngine
+  drop_at:
+    - 30
+    - 45
+  save_on:
+    - val_loss
+    - iou
+    - f1
+  num_epochs: 50
+  lr: 0.001
+  bs: 16
+  wd: 0.0001
+
+data:
+  dataset_cls: segx.train.dataset.SegmentationDataset
+
+  groups:
+    - name: organ
+      mode: multiclass
+      classes:
+        - background
+        - large_bowel
+        - small_bowel
+        - stomach
+
+  metadata_keys:
+    - ID
+    - case_id
+    - scan_id
+    - slice_id
+
+  stratify: null
+  group_col: case_id
+  n_folds: 5
+  num_workers: 4
+  splits_dir: workdir/cache/splits
+
+  datasets:
+    root_dir: data/segx_gi
+    default:
+      data_dir: .
+      metadata: metadata.csv
+
+  crop_size: 256
+  augs:
+    train:
+      stream:
+        transforms:
+          - resize:
+              resize_to:
+                - ${data.crop_size}
+                - ${data.crop_size}
+          - flip:
+              p: 0.5
+              axis: 1
+    val:
+      stream:
+        transforms:
+          - resize:
+              resize_to:
+                - ${data.crop_size}
+                - ${data.crop_size}
+
+checkpointer:
+  keep_old: false
+
+logging:
+  formatters:
+    simple:
+      format: "[%(asctime)s][%(name)s][%(levelname)s] - %(message)s"
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: simple
+      stream: ext://sys.stdout
+    file:
+      class: logging.FileHandler
+      filename: ${snapshot_dir}/pipeline.log
+      formatter: simple
+  root:
+    handlers:
+      - console
+      - file
+    level: INFO
+  version: 1
