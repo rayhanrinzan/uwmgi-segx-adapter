@@ -1,0 +1,1 @@
+# uwmgi-segx-adapter
