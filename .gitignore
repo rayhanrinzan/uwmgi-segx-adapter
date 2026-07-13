@@ -1,0 +1,9 @@
+data/
+workdir/
+outputs/
+*.pth
+*.npz
+*.png
+*.csv
+.DS_Store
+__pycache__/
