@@ -6,7 +6,7 @@
 #SBATCH --qos=low
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --time=12:00:00
 #SBATCH --output=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/train_%j.out
 #SBATCH --error=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/train_%j.err
