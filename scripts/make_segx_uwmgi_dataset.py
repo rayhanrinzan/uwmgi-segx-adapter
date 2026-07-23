@@ -45,7 +45,6 @@ def resolve_dataset_path(root_path: str) -> Path:
 def pixel_decoder(encoded_pixels, height: int, width: int) -> np.ndarray:
     """
     Decode RLE string into a 2D binary mask.
-    This matches the logic from your original repo.
     """
     encoded_pixels = str(encoded_pixels).split()
 
@@ -63,10 +62,7 @@ def pixel_decoder(encoded_pixels, height: int, width: int) -> np.ndarray:
 
 
 def normalize_scan_to_uint8(img: np.ndarray) -> np.ndarray:
-    """
-    Your original repo used per-slice min-max normalization.
-    SegX's default Dataset reads normal images with cv2.imread, so we save uint8 PNGs.
-    """
+    
     img = img.astype(np.float32)
 
     img_min = img.min()
