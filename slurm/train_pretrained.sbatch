@@ -11,8 +11,6 @@
 #SBATCH --output=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/pretrained_%j.out
 #SBATCH --error=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/pretrained_%j.err
 
-set -euo pipefail
-
 SEGX_DIR="/athena/imedslab/rar4037/segx"
 ADAPTER_DIR="/athena/imedslab/rar4037/uwmgi-segx-adapter"
 ARCHIVE="/athena/imedslab/scratch/rar4037/segx_gi.tar.gz"
