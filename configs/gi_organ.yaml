@@ -2,6 +2,7 @@ seed: 42
 debug: false
 device: cuda:0
 job_id: 0
+pipeline_name: gi_organ
 
 snapshot_root: workdir/experiments
 experiment_tag: gi_organ_${model.backbone}_${train.num_epochs}_${train.fold}
@@ -28,14 +29,14 @@ model:
     encoder_name: ${model.backbone}
     encoder_weights: imagenet
     in_channels: 3
+    groups: ${data.class_groups}
 
 loss:
   cls: segx.train.loss.GroupedLoss
   params:
-    groups: ${data.groups}
-    group_losses:
-      organ:
-        weight: 1.0
+    specs:
+      - grp_name: organ
+        mode: multiclass
         components:
           - cls: segmentation_models_pytorch.losses.DiceLoss
             weight: 1.0
@@ -47,11 +48,7 @@ loss:
 
 train:
   fold: 0
-  ema: false
-  ema_start_after: 1
-  ema_decay: 0.999
-  ema_update_interval: 10
-  engine: segx.train.engine.SegmentationEngine
+  engine: uwmgi_engine.UWMGISegmentationEngine
   drop_at:
     - 30
     - 45
@@ -59,19 +56,22 @@ train:
     - val_loss
     - iou
     - f1
+  metrics:
+    - iou
+    - f1
   num_epochs: 50
   lr: 0.0001
   bs: 32
   wd: 0.0001
+  num_review_samples: 4
 
 data:
   dataset_cls: segx.train.dataset.SegmentationDataset
 
-  groups:
-    - name: organ
+  class_groups:
+    - grp_name: organ
       mode: multiclass
       classes:
-        - background
         - large_bowel
         - small_bowel
         - stomach
@@ -82,17 +82,14 @@ data:
     - scan_id
     - slice_id
 
+  metadata: metadata.csv
   stratify: null
   group_col: case_id
   n_folds: 5
   num_workers: 4
-  splits_dir: workdir/cache/splits
-
-  datasets:
-    root_dir: data/segx_gi
-    default:
-      data_dir: .
-      metadata: metadata.csv
+  splits_dir: workdir/cache/splits_v2
+  data_cache_dir: workdir/cache/data_v2
+  data_dir: data/segx_gi
 
   crop_size: 256
   augs:
