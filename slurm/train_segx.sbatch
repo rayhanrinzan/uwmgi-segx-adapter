@@ -42,12 +42,12 @@ export WANDB_DIR="/athena/imedslab/rar4037/wandb"
 export WANDB_CACHE_DIR="/athena/imedslab/rar4037/.cache/wandb"
 export WANDB_TENSORBOARD_ROOT="$ADAPTER_DIR/workdir/experiments"
 
-# Experiment settings recorded by the W&B wrapper and passed to SegX.
-export SEGX_BACKBONE="resnet34"
-export SEGX_FOLD="0"
-export SEGX_EPOCHS="30"
-export SEGX_BATCH_SIZE="16"
-export SEGX_LR="0.0001"
+# Defaults may be overridden through sbatch --export for smoke tests or later folds.
+export SEGX_BACKBONE="${SEGX_BACKBONE:-resnet34}"
+export SEGX_FOLD="${SEGX_FOLD:-0}"
+export SEGX_EPOCHS="${SEGX_EPOCHS:-30}"
+export SEGX_BATCH_SIZE="${SEGX_BATCH_SIZE:-16}"
+export SEGX_LR="${SEGX_LR:-0.0001}"
 
 mkdir -p \
     "$WANDB_DIR" \
@@ -60,6 +60,7 @@ mkdir -p \
 echo "Running on: $(hostname)"
 echo "Started: $(date)"
 echo "W&B run name: $WANDB_NAME"
+echo "Fold: $SEGX_FOLD | Epochs: $SEGX_EPOCHS | Batch size: $SEGX_BATCH_SIZE"
 
 nvidia-smi
 
