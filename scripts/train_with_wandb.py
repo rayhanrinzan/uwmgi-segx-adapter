@@ -5,6 +5,37 @@ from typing import Any
 import wandb
 
 
+def install_segx_compatibility_shim() -> None:
+    """Supply symbols required by the updated SegX train code when __init__.py is stale.
+
+    The updated SegX model imports ``group_width`` from the top-level ``segx``
+    package. Some cluster copies contain the new train/model files but still have
+    the older ``src/segx/__init__.py``. Adding the missing attributes at runtime
+    keeps the private repository untouched while making that mixed checkout work.
+    """
+    import segx
+
+    if not hasattr(segx, "MULTICLASS_MODE"):
+        segx.MULTICLASS_MODE = "multiclass"
+    if not hasattr(segx, "MULTILABEL_MODE"):
+        segx.MULTILABEL_MODE = "multilabel"
+    if not hasattr(segx, "SEGMENTATION_MODES"):
+        segx.SEGMENTATION_MODES = (segx.MULTICLASS_MODE, segx.MULTILABEL_MODE)
+
+    if not hasattr(segx, "group_width"):
+        def group_width(group: dict) -> int:
+            width = len(group["classes"])
+            if group["mode"] == segx.MULTICLASS_MODE:
+                width += 1
+            return width
+
+        segx.group_width = group_width
+        print(
+            "Installed SegX compatibility shim for missing top-level group_width",
+            flush=True,
+        )
+
+
 def convert_scalar(value: Any) -> float | int | None:
     """Convert Python, NumPy, or PyTorch scalar values to W&B-safe values."""
     if isinstance(value, bool):
@@ -47,7 +78,9 @@ def main() -> None:
     run.define_metric("epoch")
     run.define_metric("*", step_metric="epoch")
 
-    # Import SegX after the W&B run is initialized.
+    # Install the compatibility symbols before importing any updated SegX modules.
+    install_segx_compatibility_shim()
+
     from segx.train.engine import SegmentationEngine
 
     original_log_metrics = SegmentationEngine.log_metrics
