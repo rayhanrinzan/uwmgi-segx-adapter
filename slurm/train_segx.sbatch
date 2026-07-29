@@ -11,6 +11,8 @@
 #SBATCH --output=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/train_%j.out
 #SBATCH --error=/athena/imedslab/rar4037/uwmgi-segx-adapter/workdir/logs/train_%j.err
 
+set -euo pipefail
+
 SEGX_DIR="/athena/imedslab/rar4037/segx"
 ADAPTER_DIR="/athena/imedslab/rar4037/uwmgi-segx-adapter"
 ARCHIVE="/athena/imedslab/scratch/rar4037/segx_gi.tar.gz"
@@ -95,7 +97,7 @@ uv python install 3.12
 uv sync
 
 # Run the adapter wrapper. Python adds ADAPTER_DIR/scripts to sys.path, allowing
-# the config to import uwmgi_engine.UWMGISegmentationEngine.
+# the config to import the UW-Madison engine and dataset adapters.
 uv run --with wandb python \
     "$ADAPTER_DIR/scripts/train_with_wandb.py" \
     config="$ADAPTER_DIR/configs/gi_organ.yaml" \
@@ -110,4 +112,4 @@ uv run --with wandb python \
     train.lr="$SEGX_LR" \
     data.num_workers=4
 
-echo "Finished: $(date)"
+echo "Finished successfully: $(date)"
